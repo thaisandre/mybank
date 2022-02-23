@@ -71,6 +71,26 @@ public class Client {
         return balance.setScale(2, HALF_UP);
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setExclusive(boolean exclusive) {
+        this.exclusive = exclusive;
+    }
+
     private boolean isPositive(BigDecimal value) {
         return value.compareTo(ZERO.setScale(2, HALF_UP)) > 0;
     }
