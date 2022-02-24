@@ -1,7 +1,7 @@
 package com.example.mybank.client;
 
 import com.example.mybank.errors.notFound.IfResourceIsFound;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
@@ -10,23 +10,28 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.List;
 
 @RestController
 public class ClientController {
 
-    @Autowired private ClientRepository clientRepository;
-    @Autowired private AccountNumberAlreadyExistsValidator accountNumberAlreadyExistsValidator;
-    @Autowired private ClientOver18YearsOldValidator clientOver18YearsOldValidator;
+    private final ClientRepository clientRepository;
+    private final AccountNumberAlreadyExistsValidator accountNumberAlreadyExistsValidator;
+    private final ClientOver18YearsOldValidator clientOver18YearsOldValidator;
 
-    @InitBinder
+    public ClientController(ClientRepository clientRepository, AccountNumberAlreadyExistsValidator accountNumberAlreadyExistsValidator, ClientOver18YearsOldValidator clientOver18YearsOldValidator) {
+        this.clientRepository = clientRepository;
+        this.accountNumberAlreadyExistsValidator = accountNumberAlreadyExistsValidator;
+        this.clientOver18YearsOldValidator = clientOver18YearsOldValidator;
+    }
+
+    @InitBinder("newClientInputDto")
     public void initBinder(WebDataBinder webDataBinder) {
         webDataBinder.addValidators(accountNumberAlreadyExistsValidator, clientOver18YearsOldValidator);
     }
 
     @GetMapping("/api/v1/clients")
     public ResponseEntity list(Pageable pageable) {
-        List<ClientOutputDto> clients = clientRepository.findAll(pageable).getContent().stream().map(ClientOutputDto::new).toList();
+        Page<ClientOutputDto> clients = clientRepository.findAll(pageable).map(ClientOutputDto::new);
         return ResponseEntity.ok(clients);
     }
 
@@ -37,8 +42,8 @@ public class ClientController {
     }
 
     @PostMapping("/api/v1/clients")
-    public ResponseEntity create(@Valid @RequestBody NewClientInputDto newClientDto, UriComponentsBuilder uriBuilder) {
-        Client client = clientRepository.save(newClientDto.toEntity());
+    public ResponseEntity create(@Valid @RequestBody NewClientInputDto newClientInputDto, UriComponentsBuilder uriBuilder) {
+        Client client = clientRepository.save(newClientInputDto.toEntity());
         URI path = uriBuilder.path("/clients/{id}").buildAndExpand(client.getId()).toUri();
         return ResponseEntity.created(path).body(new NewClientOutputDto(client));
     }

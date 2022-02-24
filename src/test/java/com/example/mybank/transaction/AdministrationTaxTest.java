@@ -18,10 +18,10 @@ import static org.mockito.Mockito.when;
 
 class AdministrationTaxTest {
 
-    private static final BigDecimal INFERIOR_LIMIT = new BigDecimal("100").setScale(2, HALF_UP);
-    private static final BigDecimal UPPER_LIMIT = new BigDecimal("300").setScale(2, HALF_UP);
-    private static final BigDecimal FOUR_THOUSANDTH = new BigDecimal("0.004").setScale(2, HALF_UP);
-    private static final BigDecimal A_TENTH = new BigDecimal("0.1").setScale(2, HALF_UP);
+    private static final BigDecimal INFERIOR_LIMIT = new BigDecimal("100").setScale(4, HALF_UP);
+    private static final BigDecimal UPPER_LIMIT = new BigDecimal("300").setScale(4, HALF_UP);
+    private static final BigDecimal FOUR_THOUSANDTH = new BigDecimal("0.004").setScale(4, HALF_UP);
+    private static final BigDecimal A_TENTH = new BigDecimal("0.1").setScale(4, HALF_UP);
 
     private AdministrationTax administrationTax;
 
@@ -48,23 +48,23 @@ class AdministrationTaxTest {
     void getValue__shouldReturnZeroWhenClientIsExclusive() {
         Client client = mock(Client.class);
         when(client.isExclusive()).thenReturn(true);
-        assertThat(administrationTax.getValue(client, UPPER_LIMIT)).isEqualTo(ZERO);
-        assertThat(administrationTax.getValue(client, INFERIOR_LIMIT)).isEqualTo(ZERO);
+        assertThat(administrationTax.getValue(client, UPPER_LIMIT)).isEqualTo(ZERO.setScale(4, HALF_UP));
+        assertThat(administrationTax.getValue(client, INFERIOR_LIMIT)).isEqualTo(ZERO.setScale(4, HALF_UP));
     }
 
     @ParameterizedTest
     @CsvSource({"0.01", "50", "99.99", "100"})
     void getValue__shouldReturnZeroWhenValueIsLessThanOrEqualInferiorLimit(String value) {
         Client client = mock(Client.class);
-        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(2, HALF_UP));
-        assertThat(taxValue).isEqualTo(ZERO);
+        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(4, HALF_UP));
+        assertThat(taxValue).isEqualTo(ZERO.setScale(4, HALF_UP));
     }
 
     @ParameterizedTest
     @CsvSource({"100.01", "150", "200", "250", "299.99"})
     void getValue__shouldReturnFourThousandthPercentWhenValueIsGreaterThanInferiorLimitAndLessThanUpperLimit(String value) {
         Client client = mock(Client.class);
-        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(2, HALF_UP));
+        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(4, HALF_UP));
         assertThat(taxValue).isEqualTo(FOUR_THOUSANDTH);
     }
 
@@ -72,7 +72,7 @@ class AdministrationTaxTest {
     @CsvSource({"300.01", "350", "400", "450", "500"})
     void getValue__shouldReturnOneTenthsPercentWhenValueIsGreaterThanUpperLimit(String value) {
         Client client = mock(Client.class);
-        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(2, HALF_UP));
+        BigDecimal taxValue = administrationTax.getValue(client, new BigDecimal(value).setScale(4, HALF_UP));
         assertThat(taxValue).isEqualTo(A_TENTH);
     }
 }

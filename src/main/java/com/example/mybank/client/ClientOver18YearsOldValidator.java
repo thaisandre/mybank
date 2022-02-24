@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import static java.time.LocalDate.now;
+import static java.time.temporal.ChronoUnit.YEARS;
 
 @Component
 class ClientOver18YearsOldValidator implements Validator {
@@ -29,6 +30,6 @@ class ClientOver18YearsOldValidator implements Validator {
     }
 
     private int getClientAge(LocalDate birthDate) {
-        return (int) ChronoUnit.YEARS.between(birthDate, now());
+        return (int) YEARS.between(birthDate, now());
     }
 }

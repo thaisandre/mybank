@@ -1,7 +1,5 @@
 package com.example.mybank.errors.badRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.validation.FieldError;
@@ -19,15 +17,11 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @RestControllerAdvice
 public class ValidationErrorsController {
 
-    private final static Logger log = LoggerFactory.getLogger(ValidationErrorsController.class);
-
     @Autowired private MessageSource messageSource;
 
     @ResponseStatus(BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ValidationErrorsOutputDto handleValidationError(MethodArgumentNotValidException exception) {
-        log.warn("[mybank.ValidationErrorsController] Bad request: " + exception.getMessage());
-
         List<ObjectError> globalErrors = exception.getBindingResult().getGlobalErrors();
         List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
 

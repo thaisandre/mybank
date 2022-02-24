@@ -13,9 +13,9 @@ public class IfResourceIsFound {
         return of(optional, RESOURCE_NOT_FOUND);
     }
 
-    public static <T> T of(Optional<T> optional, String mensagem) {
+    public static <T> T of(Optional<T> optional, String message) {
         notNull(optional, "optional must not be null");
-        hasText(mensagem, "message must not be blank");
-        return optional.orElseThrow(() -> new ResourceNotFoundException(mensagem));
+        hasText(message, "message must not be blank");
+        return optional.orElseThrow(() -> new ResourceNotFoundException(message));
     }
 }

@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.LocalDate;
 
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.LocalDate.now;
@@ -18,32 +18,32 @@ import static org.mockito.Mockito.when;
 class ClientTest {
 
     private Client validClient;
+    private static final LocalDate EIGHTEEN_YEARS_AGO = now().minusYears(18);
 
     @BeforeEach
     public void setUp() {
-
-        this.validClient = spy(new Client("John", "123-4", now()));
+        this.validClient = spy(new Client("John", "123-4", EIGHTEEN_YEARS_AGO));
     }
 
     @Test
     void constructor__shouldThrowExceptionWhenNameIsBlank() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> new Client(null, "123-4", now()))
+                .isThrownBy(() -> new Client(null, "123-4", EIGHTEEN_YEARS_AGO))
                 .withMessage("name must not be null or empty");
 
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> new Client("", "123-4", now()))
+                .isThrownBy(() -> new Client("", "123-4", EIGHTEEN_YEARS_AGO))
                 .withMessage("name must not be null or empty");
     }
 
     @Test
     void constructor__shouldThrowExceptionWhenAccountNumberIsBlank() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> new Client("John", null, now()))
+                .isThrownBy(() -> new Client("John", null, EIGHTEEN_YEARS_AGO))
                 .withMessage("accountNumber must not be null or empty");
 
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> new Client("John", "", now()))
+                .isThrownBy(() -> new Client("John", "", EIGHTEEN_YEARS_AGO))
                 .withMessage("accountNumber must not be null or empty");
     }
 
@@ -52,6 +52,13 @@ class ClientTest {
         assertThatExceptionOfType(IllegalArgumentException.class)
                 .isThrownBy(() -> new Client("John", "123-4", null))
                 .withMessage("birthDate must not be null");
+    }
+
+    @Test
+    void constructor__shouldThrowExceptionWhenClientIsLessThan18YearsAgo() {
+        assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> new Client("John", "123-4", EIGHTEEN_YEARS_AGO.plusYears(1)))
+                .withMessage("The client must be over 18 years old");
     }
 
     @Test
@@ -82,11 +89,11 @@ class ClientTest {
     @ParameterizedTest
     @CsvSource({"1000,0.99,999.01", "1000,1,999", "1000,50,950", "1000,99.99,900.01", "1000,100,900"})
     void withdraw__shouldUpdateBalanceWithoutTaxWhenClientIsLessThanOneHundred(String balance, String value, String updatedBalance) {
-        BigDecimal oneHundred = new BigDecimal(balance).setScale(2, HALF_UP);
+        BigDecimal oneHundred = new BigDecimal(balance).setScale(4, HALF_UP);
         validClient.deposit(oneHundred);
 
-        BigDecimal withdrawValue = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal withdrawValue = new BigDecimal(value).setScale(4, HALF_UP);
+        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(4, HALF_UP);
 
         validClient.withdraw(withdrawValue);
         assertThat(validClient.getBalance()).isEqualTo(expectedBalance);
@@ -95,38 +102,38 @@ class ClientTest {
     @ParameterizedTest
     @CsvSource({"1000,0.99,999.01", "1000,100,900", "1000,101,899", "1000,299.99,700.01", "1000,300,700", "1000,301,699"})
     void withdraw__shouldUpdateBalanceWithoutTaxWhenClientIsExclusive(String balance, String value, String updatedBalance) {
-        BigDecimal oneHundred = new BigDecimal(balance).setScale(2, HALF_UP);
+        BigDecimal oneHundred = new BigDecimal(balance).setScale(4, HALF_UP);
         validClient.deposit(oneHundred);
         when(validClient.isExclusive()).thenReturn(true);
 
-        BigDecimal withdrawValue = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal withdrawValue = new BigDecimal(value).setScale(4, HALF_UP);
+        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(4, HALF_UP);
 
         validClient.withdraw(withdrawValue);
         assertThat(validClient.getBalance()).isEqualTo(expectedBalance);
     }
 
     @ParameterizedTest
-    @CsvSource({"1000,101,899", "1000,200,800", "1000,299.99,700.01"})
+    @CsvSource({"1000,101,898.596", "1000,200,799.20", "1000,299.99,698.81"})
     void withdraw__shouldUpdateBalanceWithFourTenthsPercentTaxWhenValueIsGreaterThanOneHundredOrLessThanThreeHundred(String balance, String value, String updatedBalance) {
-        BigDecimal depositValue = new BigDecimal(balance).setScale(2, HALF_UP);
+        BigDecimal depositValue = new BigDecimal(balance).setScale(4, HALF_UP);
         validClient.deposit(depositValue);
 
-        BigDecimal withdrawValue = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal withdrawValue = new BigDecimal(value).setScale(4, HALF_UP);
+        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(4, HALF_UP);
 
         validClient.withdraw(withdrawValue);
         assertThat(validClient.getBalance()).isEqualTo(expectedBalance);
     }
 
     @ParameterizedTest
-    @CsvSource({"1000,300.01,669.99", "1000,301,668.9", "1000,500,450"})
+    @CsvSource({"1000,300.01,669.989", "1000,301,668.9", "1000,500,450"})
     void withdraw__shouldUpdateBalanceOnePercentTaxWhenValueIsGreaterThanThreeHundred(String balance, String value, String updatedBalance) {
-        BigDecimal depositValue = new BigDecimal(balance).setScale(2, HALF_UP);
+        BigDecimal depositValue = new BigDecimal(balance).setScale(4, HALF_UP);
         validClient.deposit(depositValue);
 
-        BigDecimal withdrawValue = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal withdrawValue = new BigDecimal(value).setScale(4, HALF_UP);
+        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(4, HALF_UP);
 
         validClient.withdraw(withdrawValue);
         assertThat(validClient.getBalance()).isEqualTo(expectedBalance);
@@ -153,9 +160,9 @@ class ClientTest {
     @ParameterizedTest
     @CsvSource({"0.01,0.01", "299.667,299.667", "543,543"})
     void deposit__shouldAddValueToBalanceWhenValueIsPositive(String value, String updatedBalance) {
-        assertThat(validClient.getBalance()).isEqualTo(BigDecimal.ZERO.setScale(2, HALF_UP));
-        BigDecimal depositValue = new BigDecimal(value).setScale(2, HALF_UP);
-        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(2, RoundingMode.HALF_UP);
+        assertThat(validClient.getBalance()).isEqualTo(BigDecimal.ZERO.setScale(4, HALF_UP));
+        BigDecimal depositValue = new BigDecimal(value).setScale(4, HALF_UP);
+        BigDecimal expectedBalance = new BigDecimal(updatedBalance).setScale(4, HALF_UP);
         validClient.deposit(depositValue);
         assertThat(validClient.getBalance()).isEqualTo(expectedBalance);
     }

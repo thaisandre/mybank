@@ -5,11 +5,13 @@ import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import static com.example.mybank.transaction.TransactionType.WITHDRAW;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.YEARS;
 import static javax.persistence.GenerationType.IDENTITY;
 import static org.springframework.util.Assert.*;
 
@@ -29,7 +31,7 @@ public class Client {
     private boolean exclusive;
 
     @NotNull
-    private BigDecimal balance = ZERO.setScale(2, HALF_UP);
+    private BigDecimal balance = ZERO.setScale(4, HALF_UP);
 
     @Column(unique = true)
     private String accountNumber;
@@ -44,6 +46,7 @@ public class Client {
         hasText(name, "name must not be null or empty");
         hasText(accountNumber, "accountNumber must not be null or empty");
         notNull(birthDate, "birthDate must not be null");
+        isTrue(YEARS.between(birthDate, LocalDate.now()) >= 18, "The client must be over 18 years old");
         this.name = name;
         this.accountNumber = accountNumber;
         this.birthDate = birthDate;
@@ -61,6 +64,7 @@ public class Client {
         notNull(value, "value must not be null");
         isTrue(isPositive(value), "value must be a positive number");
         balance = balance.add(value);
+
     }
 
     public boolean isExclusive() {
@@ -68,7 +72,7 @@ public class Client {
     }
 
     public BigDecimal getBalance() {
-        return balance.setScale(2, HALF_UP);
+        return balance.setScale(4, HALF_UP);
     }
 
     public Long getId() {
@@ -92,7 +96,7 @@ public class Client {
     }
 
     private boolean isPositive(BigDecimal value) {
-        return value.compareTo(ZERO.setScale(2, HALF_UP)) > 0;
+        return value.compareTo(ZERO.setScale(4, HALF_UP)) > 0;
     }
 
     private boolean isLessThanOrEqualToBalance(BigDecimal value) {
